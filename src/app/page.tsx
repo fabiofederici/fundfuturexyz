@@ -8,7 +8,7 @@ export default function Home() {
                   animate={{opacity: 1, scale: 1}} transition={{ease: "easeOut", duration: 0.3}}>
           <p className="text-xl font-light">FundFuture.xyz</p>
           <p className="text-sm text-muted-foreground">Coming soon...</p>
-          <p className="text-xs text-muted-foreground absolute left-4 bottom-4 font-mono">© 2024</p>
       </motion.div>
+      <p className="text-xs text-muted-foreground absolute left-4 bottom-4 font-mono">© 2024</p>
   </div>);
 }
