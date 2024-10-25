@@ -27,7 +27,7 @@ export default function Home() {
                         setStatus(`Error: ${data.error}\nDetails: ${data.details || 'No details available'}`);
                     } else {
                         const titles = data.articles?.map((article: Article) => article.title) || [];
-                        setStatus(`Found ${titles.length} headlines:\n\n${titles.join('\n')}`);
+                        setStatus(`The latest ${titles.length} headlines in onchain funds & tokenization:\n\n${titles.join('\n')}`);
                     }
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
