@@ -2,32 +2,80 @@
 
 import { useEffect, useState } from 'react';
 
-interface Article {
+interface NewsItem {
     title: string;
-    link: string;
+    type: 'article' | 'event';
 }
 
 interface ApiResponse {
-    articles?: Article[];
+    results: NewsItem[];
+    stats: {
+        articles: {
+            original: number;
+            withEventUri: number;
+            final: number;
+        };
+        events: {
+            original: number;
+            final: number;
+        };
+    };
     error?: string;
     details?: string;
+}
+
+// Function to clean titles with specific suffix removals
+function cleanTitle(title: string): string {
+    const suffixesToRemove = [
+        ' - Decrypt',
+        ' | Investing.com',
+        ': Report',
+        ' By Investing.com'
+    ];
+
+    // Start with the original title
+    let cleanedTitle = title;
+
+    // Remove each suffix if it exists at the end of the title
+    for (const suffix of suffixesToRemove) {
+        if (cleanedTitle.endsWith(suffix)) {
+            cleanedTitle = cleanedTitle.slice(0, -suffix.length);
+        }
+    }
+
+    return cleanedTitle;
 }
 
 export default function Home() {
     const [status, setStatus] = useState('Loading...');
 
     useEffect(() => {
-        fetch('/api/news')
+        fetch('/api/newsapi')
             .then(async (res) => {
                 const text = await res.text();
-                console.log('Raw response:', text.substring(0, 200));
                 try {
                     const data: ApiResponse = JSON.parse(text);
                     if (data.error) {
                         setStatus(`Error: ${data.error}\nDetails: ${data.details || 'No details available'}`);
                     } else {
-                        const titles = data.articles?.map((article: Article) => article.title) || [];
-                        setStatus(`The latest ${titles.length} headlines in onchain funds & tokenization:\n\n${titles.join('\n')}`);
+                        const titles = data.results.map(item => {
+                            // Clean the title but preserve the event marker if it exists
+                            const isEvent = item.title.endsWith(' *');
+                            const cleanedTitle = cleanTitle(isEvent ? item.title.slice(0, -2) : item.title);
+                            return isEvent ? `${cleanedTitle} *` : cleanedTitle;
+                        });
+
+                        // Log stats to console
+                        console.log('Stats:', {
+                            articles: data.stats.articles,
+                            events: data.stats.events,
+                            totalResults: titles.length
+                        });
+
+                        setStatus(
+                            `The latest ${titles.length} headlines in onchain funds & tokenization:\n\n` +
+                            titles.join('\n')
+                        );
                     }
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
