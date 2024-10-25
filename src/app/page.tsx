@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 interface Article {
     title: string;
     link: string;
-    // Add other article properties as needed
 }
 
 interface ApiResponse {
@@ -30,13 +29,15 @@ export default function Home() {
                         const titles = data.articles?.map((article: Article) => article.title) || [];
                         setStatus(`Found ${titles.length} headlines:\n\n${titles.join('\n')}`);
                     }
-                } catch (e) {
-                    setStatus(`Failed to parse response: ${text.substring(0, 100)}...`);
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    console.error('Parse error:', error);
+                    setStatus(`Failed to parse response: ${text.substring(0, 100)}...\nError: ${errorMessage}`);
                 }
             })
-            .catch((err: Error) => {
-                setStatus(`Failed to fetch: ${err.message}`);
-                console.error('Fetch error:', err);
+            .catch((error: Error) => {
+                setStatus(`Failed to fetch: ${error.message}`);
+                console.error('Fetch error:', error);
             });
     }, []);
 
