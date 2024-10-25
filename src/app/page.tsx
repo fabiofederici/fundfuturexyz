@@ -9,6 +9,6 @@ export default function Home() {
           <p className="text-xl font-light">FundFuture.xyz</p>
           <p className="text-sm text-muted-foreground">Coming soon...</p>
       </motion.div>
-      <p className="text-xs text-muted-foreground absolute left-4 bottom-4 font-mono">© 2024</p>
+      <p className="text-xs text-muted-foreground absolute left-4 bottom-4 font-mono">© 2024 FundFuture</p>
   </div>);
 }
