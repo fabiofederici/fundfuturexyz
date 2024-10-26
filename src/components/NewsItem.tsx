@@ -129,9 +129,12 @@ export default function NewsItem({ title, type, url, body, summary, date }: News
             animate={{ opacity: 1 }}
             transition={{ ease: "easeInOut", duration: 0.42 }}
         >
-            <div
+            <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={handleClick}
-                className="cursor-pointer p-4 border-b hover:bg-muted/50 dark:hover:bg-muted/25 opacity-80 hover:opacity-100 transition-all"
+                className="relative z-10 block cursor-pointer p-4 border-b hover:bg-muted/50 dark:hover:bg-muted/25 opacity-80 hover:opacity-100 transition-all"
             >
                 <div className="flex flex-col">
                     <div className="font-semibold mb-1">{title}</div>
@@ -154,6 +157,6 @@ export default function NewsItem({ title, type, url, body, summary, date }: News
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </motion.div>);
 }
