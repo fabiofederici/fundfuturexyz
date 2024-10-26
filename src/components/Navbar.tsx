@@ -18,7 +18,7 @@ export function Navbar() {
                 </div>
 
                 {/* Tagline Section */}
-                <div className="sm:appearance-none text-sm text-right text-muted-foreground overflow-hidden whitespace-nowrap text-ellipsis w-1/2">
+                <div className="text-sm text-right overflow-hidden whitespace-nowrap text-ellipsis w-1/2 text-transparent  sm:text-transparent md:text-muted-foreground">
                     The latest in onchain asset management & fund tokenization news.
                 </div>
             </div>
