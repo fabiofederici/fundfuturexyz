@@ -135,11 +135,10 @@ export default function NewsItem({ title, type, url, body, summary, date }: News
             >
                 <div className="flex flex-col">
                     <div className="font-semibold mb-1">{title}</div>
-                    {description && (
-                        <div className="text-sm text-muted-foreground overflow-hidden whitespace-nowrap text-ellipsis">
-                            {description}
-                        </div>
-                    )}
+
+                    {description && (<div className="text-sm text-muted-foreground font-normal overflow-hidden whitespace-nowrap text-ellipsis">
+                        {description}
+                    </div>)}
                     <div className="flex justify-between items-center mt-2 text-xs font-mono text-muted-foreground/50">
                         <div>
                             {formattedDate}
@@ -156,6 +155,5 @@ export default function NewsItem({ title, type, url, body, summary, date }: News
                     </div>
                 </div>
             </div>
-        </motion.div>
-    );
+        </motion.div>);
 }

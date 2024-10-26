@@ -14,7 +14,9 @@ export function Navbar() {
             <div className="container pl-4 pr-4 max-w-4xl flex justify-between items-center">
                 {/* Text-Based Logo Section */}
                 <div className="flex items-center">
-                    <span className="text-xl ">FundFuture</span>
+                    <span className="text-xl font-light bg-gradient-to-r from-foreground to-muted-foreground/75 bg-clip-text text-transparent">
+                        <span className="font-normal">Fund</span>Future
+                    </span>
                 </div>
 
                 {/* Tagline Section */}

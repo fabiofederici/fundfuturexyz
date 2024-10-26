@@ -12,13 +12,28 @@ const config: Config = {
 	],
 	theme: {
 		container: {
-			center: true, // Changed from string to boolean
+			center: true,
 			padding: "2rem",
 			screens: {
 				"2xl": "1400px",
 			},
 		},
 		extend: {
+			fontFamily: {
+				// Apply Satoshi font family for different weights
+				light: ['Satoshi', 'Inter', 'sans-serif'],
+				normal: ['Satoshi', 'Inter', 'sans-serif'],
+				medium: ['Satoshi', 'Inter', 'sans-serif'],
+				bold: ['Satoshi', 'Inter', 'sans-serif'],
+				black: ['Satoshi', 'Inter', 'sans-serif'],
+			},
+			fontWeight: {
+				light: '300',   // Change to string
+				normal: '400',  // Change to string
+				medium: '500',  // Change to string
+				bold: '700',    // Change to string
+				black: '900',   // Change to string
+			},
 			colors: {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',

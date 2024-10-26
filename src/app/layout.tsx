@@ -6,6 +6,8 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/Navbar";
 import {FloatingBox} from "@/components/FloatingBox";
+import '@/styles/satoshi.css'; // Import your custom font CSS
+import '@fontsource/inter';
 
 export const metadata: Metadata = {
     title: "FundFuture",
