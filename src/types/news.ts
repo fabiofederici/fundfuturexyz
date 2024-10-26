@@ -1,10 +1,12 @@
 // src/types/news.ts
+
 export interface NewsArticle {
     title: string;
     url: string;
     dateTime: string;
     eventUri: string | null;
     body?: string;
+    uri: string;
 }
 
 export interface MedoidArticle {
@@ -30,12 +32,21 @@ export interface Event {
     stories?: Story[];
 }
 
+export interface ProcessedNewsItem extends NewsArticle {
+    eventUri: string | null;
+    summary?: string;
+    uri: string;
+    article_uri?: string | null;  // Changed to allow null
+}
+
 export interface FormattedNewsItem {
     title: string;
     type: 'article' | 'event';
+    date: string;
     url?: string;
     body?: string;
     summary?: string;
-    date: string;
     uri?: string;
+    article_uri?: string | null;  // Changed to allow null
+    event_uri?: string | null;    // Changed to allow null
 }

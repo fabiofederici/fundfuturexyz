@@ -4,7 +4,8 @@ import { notifications } from './notifications';
 import type {
     NewsArticle,
     Event,
-    FormattedNewsItem
+    FormattedNewsItem,
+    ProcessedNewsItem  // Added this
 } from '@/types/news';
 
 const supabaseAdmin = createClient(
@@ -12,7 +13,6 @@ const supabaseAdmin = createClient(
     process.env.SUPABASE_SERVICE_KEY!
 );
 
-// Move these from your original file
 const PRIORITY_SOURCES = ["BlackRock", "Franklin Templeton"];
 const TITLE_SUFFIXES_TO_REMOVE = [
     ' - Decrypt',
@@ -54,7 +54,7 @@ function processResults(
         }
     });
 
-    const processedResults: (NewsArticle & { eventUri: string | null; summary?: string })[] = [];
+    const processedResults: ProcessedNewsItem[] = [];
     const seenTitles = new Set<string>();
 
     // Process events with related articles
@@ -63,6 +63,7 @@ function processResults(
         let bestTitle = event.title.eng;
         let url: string | undefined = undefined;
         let dateTime = event.eventDate;
+        let articleUri = null;
 
         // First check for priority source in related articles
         const priorityArticle = relatedArticles.find(article =>
@@ -73,6 +74,7 @@ function processResults(
             bestTitle = priorityArticle.title;
             url = priorityArticle.url;
             dateTime = priorityArticle.dateTime;
+            articleUri = priorityArticle.uri;
         } else {
             // If no priority article, use medoidArticle URL and date if available
             const medoidArticle = event.stories?.[0]?.medoidArticle;
@@ -87,11 +89,13 @@ function processResults(
         if (!seenTitles.has(bestTitle.toLowerCase())) {
             processedResults.push({
                 title: bestTitle,
-                eventUri: event.uri,
                 dateTime: dateTime,
                 url: url || '',
-                summary: event.summary?.eng,
-                body: undefined
+                eventUri: event.uri,
+                body: undefined,
+                uri: event.uri,
+                article_uri: articleUri,
+                summary: event.summary?.eng
             });
             seenTitles.add(bestTitle.toLowerCase());
         }
@@ -104,7 +108,9 @@ function processResults(
             processedResults.push({
                 ...article,
                 title: cleanedTitle,
-                eventUri: null
+                eventUri: null,
+                uri: article.uri,
+                article_uri: article.uri
             });
             seenTitles.add(cleanedTitle.toLowerCase());
         }
@@ -117,10 +123,12 @@ function processResults(
         date: item.dateTime,
         url: item.url,
         body: item.body,
-        summary: item.summary
+        summary: item.summary,
+        uri: item.uri,
+        article_uri: item.article_uri || null,
+        event_uri: item.eventUri || null
     }));
 
-    // Sort by date (newest first)
     return formattedResults.sort((a, b) => {
         const dateA = new Date(a.date);
         const dateB = new Date(b.date);
@@ -135,6 +143,7 @@ export class NewsService {
         this.apiKey = apiKey;
     }
 
+    // In the fetchAndCacheNews method of news-service.ts
     async fetchAndCacheNews() {
         try {
             const [articlesResponse, eventsResponse] = await Promise.all([
@@ -147,7 +156,7 @@ export class NewsService {
 
             const formattedResults = processResults(articles, events);
 
-            // Store in Supabase
+            // Single upsert with column names
             const { error } = await supabaseAdmin
                 .from('news_items')
                 .upsert(
@@ -158,12 +167,13 @@ export class NewsService {
                         body: item.body,
                         summary: item.summary,
                         date: item.date,
-                        event_uri: item.type === 'event' ? item.uri : null,
+                        article_uri: item.article_uri,
+                        event_uri: item.event_uri,
                         updated_at: new Date().toISOString()
                     })),
                     {
-                        onConflict: 'title,date',
-                        ignoreDuplicates: false
+                        onConflict: 'article_uri,event_uri', // Use column names directly
+                        ignoreDuplicates: true
                     }
                 );
 
