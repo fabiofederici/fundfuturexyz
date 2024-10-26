@@ -15,6 +15,18 @@ interface NewsArticle {
     url: string;
     dateTime: string;
     eventUri: string | null;
+    body?: string;
+}
+
+interface MedoidArticle {
+    url: string;
+    title: string;
+    dateTime: string;
+}
+
+interface Story {
+    uri: string;
+    medoidArticle?: MedoidArticle;
 }
 
 interface Event {
@@ -23,6 +35,10 @@ interface Event {
         eng: string;
     };
     eventDate: string;
+    summary?: {
+        eng?: string;
+    };
+    stories?: Story[];
 }
 
 interface ArticleResponse {
@@ -35,6 +51,15 @@ interface EventResponse {
     events?: {
         results: Event[];
     };
+}
+
+interface FormattedNewsItem {
+    title: string;
+    type: 'article' | 'event';
+    url?: string;
+    body?: string;
+    summary?: string;
+    date: string;
 }
 
 function cleanTitle(title: string): string {
@@ -53,8 +78,10 @@ function hasPrioritySource(title: string): boolean {
     );
 }
 
-function processResults(articles: NewsArticle[], events: Event[]): { title: string; eventUri: string | null; }[] {
-    // Step 1: Create a map of eventUri to all related articles
+function processResults(
+    articles: NewsArticle[],
+    events: Event[]
+): FormattedNewsItem[] {
     const eventArticlesMap = new Map<string, NewsArticle[]>();
     const standaloneArticles: NewsArticle[] = [];
 
@@ -68,22 +95,32 @@ function processResults(articles: NewsArticle[], events: Event[]): { title: stri
         }
     });
 
-    // Step 2: Process each event, choosing the best title
-    const processedResults: { title: string; eventUri: string | null; }[] = [];
+    const processedResults: (NewsArticle & { eventUri: string | null; summary?: string })[] = [];
     const seenTitles = new Set<string>();
 
-    // Process events and their articles
+    // Process events with related articles
     events.forEach(event => {
         const relatedArticles = eventArticlesMap.get(event.uri) || [];
         let bestTitle = event.title.eng;
+        let url: string | undefined = undefined;
+        let dateTime = event.eventDate;
 
-        // Check if any related article has a priority source
+        // First check for priority source in related articles
         const priorityArticle = relatedArticles.find(article =>
             hasPrioritySource(article.title)
         );
 
         if (priorityArticle) {
             bestTitle = priorityArticle.title;
+            url = priorityArticle.url;
+            dateTime = priorityArticle.dateTime;
+        } else {
+            // If no priority article, use medoidArticle URL and date if available
+            const medoidArticle = event.stories?.[0]?.medoidArticle;
+            if (medoidArticle) {
+                url = medoidArticle.url;
+                dateTime = medoidArticle.dateTime;
+            }
         }
 
         bestTitle = cleanTitle(bestTitle);
@@ -91,7 +128,11 @@ function processResults(articles: NewsArticle[], events: Event[]): { title: stri
         if (!seenTitles.has(bestTitle.toLowerCase())) {
             processedResults.push({
                 title: bestTitle,
-                eventUri: event.uri
+                eventUri: event.uri,
+                dateTime: dateTime,
+                url: url || '',
+                summary: event.summary?.eng,
+                body: undefined
             });
             seenTitles.add(bestTitle.toLowerCase());
         }
@@ -102,6 +143,7 @@ function processResults(articles: NewsArticle[], events: Event[]): { title: stri
         const cleanedTitle = cleanTitle(article.title);
         if (!seenTitles.has(cleanedTitle.toLowerCase())) {
             processedResults.push({
+                ...article,
                 title: cleanedTitle,
                 eventUri: null
             });
@@ -109,8 +151,24 @@ function processResults(articles: NewsArticle[], events: Event[]): { title: stri
         }
     });
 
-    return processedResults;
+    // Format the results
+    const formattedResults: FormattedNewsItem[] = processedResults.map(item => ({
+        title: `${item.title}${item.eventUri ? '' : ''}`,
+        type: item.eventUri ? 'event' : 'article',
+        date: item.dateTime,
+        url: item.url,
+        body: item.body,
+        summary: item.summary
+    }));
+
+    // Sort by date (newest first)
+    return formattedResults.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB.getTime() - dateA.getTime();
+    });
 }
+
 
 export async function GET(): Promise<NextResponse> {
     try {
@@ -119,7 +177,6 @@ export async function GET(): Promise<NextResponse> {
             return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
         }
 
-        // Fetch articles and events
         const [articlesResponse, eventsResponse] = await Promise.all([
             fetch('https://newsapi.ai/api/v1/article/getArticlesForTopicPage', {
                 method: 'POST',
@@ -129,6 +186,8 @@ export async function GET(): Promise<NextResponse> {
                     dataType: ["news", "pr", "blog"],
                     resultType: "articles",
                     articlesSortBy: "date",
+                    articlesIncludeArticleBody: true,
+                    articlesArticleBodyLen: -1,
                     apiKey
                 })
             }),
@@ -141,8 +200,8 @@ export async function GET(): Promise<NextResponse> {
                     eventsSortBy: "date",
                     includeEventSummary: true,
                     includeEventStories: true,
+                    includeStoryMedoidArticle: true,
                     eventImageCount: 1,
-                    includeStoryBasicStats: true,
                     includeStoryTitle: true,
                     includeStoryDate: true,
                     storyImageCount: 1,
@@ -157,16 +216,8 @@ export async function GET(): Promise<NextResponse> {
         const articles = articlesData.articles?.results || [];
         const events = eventsData.events?.results || [];
 
-        // Process results
-        const processedResults = processResults(articles, events);
+        const formattedResults = processResults(articles, events);
 
-        // Format for final display
-        const formattedResults = processedResults.map(item => ({
-            title: `${item.title}${item.eventUri ? ' *' : ''}`,
-            type: item.eventUri ? 'event' as const : 'article' as const
-        }));
-
-        // Prepare stats
         const stats = {
             originalArticles: articles.length,
             originalEvents: events.length,

@@ -1,37 +1,37 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/react"
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+import { Analytics } from "@vercel/analytics/react";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Navbar } from "@/components/Navbar";
+import {FloatingBox} from "@/components/FloatingBox";
 
 export const metadata: Metadata = {
-  title: "FundFuture",
-  description: "The latest in onchain funds & tokenization.",
+    title: "FundFuture",
+    description: "The latest in onchain funds & tokenization.",
 };
 
 export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
+                                       children,
+                                   }: Readonly<{
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      <Analytics />
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en" suppressHydrationWarning>
+        <body className="bg-background text-foreground">
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            {/* Include Navbar */}
+            <Navbar />
+            {children}
+            <FloatingBox />
+            <Analytics />
+        </ThemeProvider>
+        </body>
+        </html>
+    );
 }
