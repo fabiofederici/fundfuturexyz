@@ -1,4 +1,3 @@
-// src/app/components/NewsItem.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -26,9 +25,7 @@ export default function NewsItem({ title, type, url, body, summary, date }: News
     const [clicks, setClicks] = useState(0);
     const description = type === 'article' ? body : summary;
 
-    // Subscribe to real-time updates for clicks
     useEffect(() => {
-        // Initial fetch of clicks
         const fetchClicks = async () => {
             const { data, error } = await supabase
                 .from('news_items')
@@ -43,7 +40,6 @@ export default function NewsItem({ title, type, url, body, summary, date }: News
 
         fetchClicks();
 
-        // Subscribe to real-time changes
         const channel = supabase
             .channel('news_clicks')
             .on(
@@ -100,25 +96,22 @@ export default function NewsItem({ title, type, url, body, summary, date }: News
     };
 
     const handleClick = async () => {
-        if (url) {
-            try {
-                // Update clicks in Supabase
-                const { error } = await supabase
-                    .from('news_items')
-                    .update({ clicks: clicks + 1 })
-                    .eq('title', title);
+        if (!url) return;
 
-                if (!error) {
-                    // Optimistically update local state
-                    setClicks(prev => prev + 1);
-                    // Open the URL after successful update
-                    window.open(url, '_blank');
-                } else {
-                    console.error('Error updating clicks:', error);
-                }
-            } catch (error) {
+        try {
+            // Update clicks in Supabase
+            const { error } = await supabase
+                .from('news_items')
+                .update({ clicks: clicks + 1 })
+                .eq('title', title);
+
+            if (!error) {
+                setClicks(prev => prev + 1);
+            } else {
                 console.error('Error updating clicks:', error);
             }
+        } catch (error) {
+            console.error('Error updating clicks:', error);
         }
     };
 
@@ -139,9 +132,11 @@ export default function NewsItem({ title, type, url, body, summary, date }: News
                 <div className="flex flex-col">
                     <div className="font-semibold mb-1">{title}</div>
 
-                    {description && (<div className="text-sm text-muted-foreground font-normal overflow-hidden whitespace-nowrap text-ellipsis">
-                        {description}
-                    </div>)}
+                    {description && (
+                        <div className="text-sm text-muted-foreground font-normal overflow-hidden whitespace-nowrap text-ellipsis">
+                            {description}
+                        </div>
+                    )}
                     <div className="flex justify-between items-center mt-2 text-xs font-mono text-muted-foreground/50">
                         <div>
                             {formattedDate}
@@ -158,5 +153,6 @@ export default function NewsItem({ title, type, url, body, summary, date }: News
                     </div>
                 </div>
             </a>
-        </motion.div>);
+        </motion.div>
+    );
 }
