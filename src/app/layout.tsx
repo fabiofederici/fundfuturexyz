@@ -2,13 +2,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/Navbar";
 import {FloatingBox} from "@/components/FloatingBox";
 
 export const metadata: Metadata = {
     title: "FundFuture",
-    description: "The latest in onchain funds & tokenization.",
+    description: "The latest in onchain funds & tokenization news.",
 };
 
 export default function RootLayout({
@@ -30,6 +31,7 @@ export default function RootLayout({
             {children}
             <FloatingBox />
             <Analytics />
+            <SpeedInsights />
         </ThemeProvider>
         </body>
         </html>
