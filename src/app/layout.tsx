@@ -5,8 +5,9 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/Navbar";
-import {FloatingBox} from "@/components/FloatingBox";
-import '@/styles/satoshi.css'; // Import your custom font CSS
+import { FloatingBox } from "@/components/FloatingBox";
+import { Toaster } from "@/components/ui/toaster";  // Add this import
+import '@/styles/satoshi.css';
 import '@fontsource/inter';
 
 export const metadata: Metadata = {
@@ -28,10 +29,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
         >
-            {/* Include Navbar */}
             <Navbar />
             {children}
             <FloatingBox />
+            <Toaster />
             <Analytics />
             <SpeedInsights />
         </ThemeProvider>
