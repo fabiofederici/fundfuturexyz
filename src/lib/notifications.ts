@@ -1,10 +1,23 @@
 // src/lib/notifications.ts
 type NotificationLevel = 'info' | 'warning' | 'error';
 
+interface SlackField {
+    title: string;
+    value: string;
+    short?: boolean;
+}
+
+interface SlackAttachment {
+    color?: string;
+    fields?: SlackField[];
+    footer?: string;
+    footer_icon?: string;
+}
+
 interface NotificationOptions {
     emoji?: string;
     channel?: string;
-    attachments?: any[];
+    attachments?: SlackAttachment[];
 }
 
 class NotificationService {
@@ -88,7 +101,7 @@ class NotificationService {
         );
     }
 
-    async newsUpdateError(error: Error, context: any = {}) {
+    async newsUpdateError(error: Error, context: Record<string, string | number>) {
         await this.send(
             `Failed to update news articles`,
             'error',
