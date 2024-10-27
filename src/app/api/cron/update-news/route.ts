@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 interface NewsUpdateResult {
     success: boolean;
