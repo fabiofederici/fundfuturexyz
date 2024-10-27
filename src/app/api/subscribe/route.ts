@@ -1,13 +1,21 @@
 // src/app/api/subscribe/route.ts
 import { NextResponse } from 'next/server'
+import { Resend } from 'resend';
+
+// Initialize Resend client
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
     try {
-        // Log the API key (first few characters)
-        const apiKey = process.env.NEXT_PUBLIC_LOOPS_API_KEY;
-        console.log('API Key available:', !!apiKey);
-        if (!apiKey) {
-            throw new Error('API key is not configured');
+        // Check for API key and Audience ID
+        const audienceId = process.env.RESEND_AUDIENCE_ID?.replace('aud_', '');
+
+        if (!process.env.RESEND_API_KEY) {
+            throw new Error('Resend API key is not configured');
+        }
+
+        if (!audienceId) {
+            throw new Error('Resend Audience ID is not configured');
         }
 
         // Parse request body
@@ -19,41 +27,39 @@ export async function POST(request: Request) {
             );
         }
 
-        console.log('Attempting to subscribe:', email);
+        console.log('Attempting to add contact:', email);
+        console.log('Using Audience ID (without prefix):', audienceId);
 
-        // Make request to Loops.so
-        const response = await fetch('https://app.loops.so/api/v1/contacts/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                email,
-                source: "website_footer",
-                subscribed: true,
-            })
+        // Add contact to Resend Audience - using the UUID without the 'aud_' prefix
+        const response = await resend.contacts.create({
+            email,
+            audienceId: audienceId,
+            unsubscribed: false,
         });
 
-        // Log the raw response
-        console.log('Loops API response status:', response.status);
-        const responseData = await response.json();
-        console.log('Loops API response:', responseData);
+        // Log the response for debugging
+        console.log('Resend API response:', JSON.stringify(response, null, 2));
 
-        if (!response.ok) {
+        // Type guard for error response
+        if ('error' in response && response.error) {
+            console.error('Resend API error:', response.error);
             return NextResponse.json(
                 {
                     success: false,
-                    message: responseData.message || 'Failed to subscribe',
-                    details: responseData
+                    message: response.error.message || 'Failed to subscribe',
+                    error: {
+                        message: response.error.message,
+                        type: response.error.name
+                    }
                 },
-                { status: response.status }
+                { status: 400 }
             );
         }
 
         return NextResponse.json({
             success: true,
-            message: 'Successfully subscribed'
+            message: 'Successfully subscribed',
+            contact: response
         });
     } catch (error) {
         // Log the full error
