@@ -5,7 +5,7 @@ import type {
     NewsArticle,
     Event,
     FormattedNewsItem,
-    ProcessedNewsItem  // Added this
+    ProcessedNewsItem
 } from '@/types/news';
 
 const supabaseAdmin = createClient(
@@ -21,14 +21,23 @@ const TITLE_SUFFIXES_TO_REMOVE = [
     ' By Investing.com'
 ];
 
+// Enhanced title cleaning function
 function cleanTitle(title: string): string {
-    let cleanedTitle = title;
+    let cleanedTitle = title.trim();
     for (const suffix of TITLE_SUFFIXES_TO_REMOVE) {
-        if (cleanedTitle.endsWith(suffix)) {
-            cleanedTitle = cleanedTitle.slice(0, -suffix.length);
+        if (cleanedTitle.toLowerCase().endsWith(suffix.toLowerCase())) {
+            cleanedTitle = cleanedTitle.slice(0, -suffix.length).trim();
         }
     }
-    return cleanedTitle;
+    // Remove multiple spaces and normalize whitespace
+    return cleanedTitle.replace(/\s+/g, ' ');
+}
+
+// Generate a normalized version of the title for comparison
+function getNormalizedTitle(title: string): string {
+    return cleanTitle(title)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric characters
 }
 
 function hasPrioritySource(title: string): boolean {
@@ -43,6 +52,7 @@ function processResults(
 ): FormattedNewsItem[] {
     const eventArticlesMap = new Map<string, NewsArticle[]>();
     const standaloneArticles: NewsArticle[] = [];
+    const seenNormalizedTitles = new Map<string, ProcessedNewsItem>();
 
     articles.forEach(article => {
         if (article.eventUri) {
@@ -55,7 +65,6 @@ function processResults(
     });
 
     const processedResults: ProcessedNewsItem[] = [];
-    const seenTitles = new Set<string>();
 
     // Process events with related articles
     events.forEach(event => {
@@ -65,7 +74,7 @@ function processResults(
         let dateTime = event.eventDate;
         let articleUri = null;
 
-        // First check for priority source in related articles
+        // Priority source check
         const priorityArticle = relatedArticles.find(article =>
             hasPrioritySource(article.title)
         );
@@ -76,7 +85,6 @@ function processResults(
             dateTime = priorityArticle.dateTime;
             articleUri = priorityArticle.uri;
         } else {
-            // If no priority article, use medoidArticle URL and date if available
             const medoidArticle = event.stories?.[0]?.medoidArticle;
             if (medoidArticle) {
                 url = medoidArticle.url;
@@ -85,9 +93,11 @@ function processResults(
         }
 
         bestTitle = cleanTitle(bestTitle);
+        const normalizedTitle = getNormalizedTitle(bestTitle);
 
-        if (!seenTitles.has(bestTitle.toLowerCase())) {
-            processedResults.push({
+        const existingItem = seenNormalizedTitles.get(normalizedTitle);
+        if (!existingItem || new Date(dateTime) > new Date(existingItem.dateTime)) {
+            const processedItem = {
                 title: bestTitle,
                 dateTime: dateTime,
                 url: url || '',
@@ -96,29 +106,34 @@ function processResults(
                 uri: event.uri,
                 article_uri: articleUri,
                 summary: event.summary?.eng
-            });
-            seenTitles.add(bestTitle.toLowerCase());
+            };
+            seenNormalizedTitles.set(normalizedTitle, processedItem);
+            processedResults.push(processedItem);
         }
     });
 
     // Process standalone articles
     standaloneArticles.forEach(article => {
         const cleanedTitle = cleanTitle(article.title);
-        if (!seenTitles.has(cleanedTitle.toLowerCase())) {
-            processedResults.push({
+        const normalizedTitle = getNormalizedTitle(cleanedTitle);
+
+        const existingItem = seenNormalizedTitles.get(normalizedTitle);
+        if (!existingItem || new Date(article.dateTime) > new Date(existingItem.dateTime)) {
+            const processedItem = {
                 ...article,
                 title: cleanedTitle,
                 eventUri: null,
                 uri: article.uri,
                 article_uri: article.uri
-            });
-            seenTitles.add(cleanedTitle.toLowerCase());
+            };
+            seenNormalizedTitles.set(normalizedTitle, processedItem);
+            processedResults.push(processedItem);
         }
     });
 
     // Format the results
     const formattedResults: FormattedNewsItem[] = processedResults.map(item => ({
-        title: `${item.title}${item.eventUri ? '' : ''}`,
+        title: item.title,
         type: item.eventUri ? 'event' : 'article',
         date: item.dateTime,
         url: item.url,
@@ -129,11 +144,9 @@ function processResults(
         event_uri: item.eventUri || null
     }));
 
-    return formattedResults.sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return dateB.getTime() - dateA.getTime();
-    });
+    return formattedResults.sort((a, b) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
 }
 
 export class NewsService {
@@ -143,7 +156,6 @@ export class NewsService {
         this.apiKey = apiKey;
     }
 
-    // In the fetchAndCacheNews method of news-service.ts
     async fetchAndCacheNews() {
         try {
             const [articlesResponse, eventsResponse] = await Promise.all([
@@ -156,34 +168,52 @@ export class NewsService {
 
             const formattedResults = processResults(articles, events);
 
-            // Single upsert with column names
-            const { error } = await supabaseAdmin
+            // Get existing articles to check for updates
+            const { data: existingItems } = await supabaseAdmin
                 .from('news_items')
-                .upsert(
-                    formattedResults.map((item: FormattedNewsItem) => ({
-                        title: item.title,
-                        type: item.type,
-                        url: item.url,
-                        body: item.body,
-                        summary: item.summary,
-                        date: item.date,
-                        article_uri: item.article_uri,
-                        event_uri: item.event_uri,
-                        updated_at: new Date().toISOString()
-                    })),
-                    {
-                        onConflict: 'article_uri,event_uri', // Use column names directly
-                        ignoreDuplicates: true
-                    }
-                );
+                .select('title, article_uri, event_uri, date');
 
-            if (error) throw error;
+            // Filter out items that haven't changed
+            const itemsToUpsert = formattedResults.filter(newItem => {
+                const existingItem = existingItems?.find(item =>
+                    item.article_uri === newItem.article_uri &&
+                    item.event_uri === newItem.event_uri
+                );
+                return !existingItem ||
+                    existingItem.title !== newItem.title ||
+                    new Date(existingItem.date).getTime() !== new Date(newItem.date).getTime();
+            });
+
+            if (itemsToUpsert.length > 0) {
+                const { error } = await supabaseAdmin
+                    .from('news_items')
+                    .upsert(
+                        itemsToUpsert.map(item => ({
+                            title: item.title,
+                            type: item.type,
+                            url: item.url,
+                            body: item.body,
+                            summary: item.summary,
+                            date: item.date,
+                            article_uri: item.article_uri,
+                            event_uri: item.event_uri,
+                            updated_at: new Date().toISOString()
+                        })),
+                        {
+                            onConflict: 'article_uri,event_uri',
+                            ignoreDuplicates: false // Changed to false to allow updates
+                        }
+                    );
+
+                if (error) throw error;
+            }
 
             await notifications.newsUpdateSuccess(formattedResults.length);
 
             return {
                 success: true,
-                processed: formattedResults.length
+                processed: formattedResults.length,
+                upserted: itemsToUpsert.length
             };
         } catch (error) {
             await notifications.newsUpdateError(error as Error, {
