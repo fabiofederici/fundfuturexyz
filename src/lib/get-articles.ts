@@ -12,7 +12,8 @@ interface NewsItem {
     excerpt: string;
     link: string;
     type: string;
-    summary: string;
+    // summary: string;
+    clicks: number;
 }
 
 export async function getPreviousMonthArticles(): Promise<NewsItem[]> {
@@ -21,7 +22,7 @@ export async function getPreviousMonthArticles(): Promise<NewsItem[]> {
     const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59);
 
-    console.log('Fetching articles between:', {
+    console.log('Fetching most clicked articles between:', {
         start: firstDayLastMonth.toISOString(),
         end: lastDayLastMonth.toISOString()
     });
@@ -32,7 +33,8 @@ export async function getPreviousMonthArticles(): Promise<NewsItem[]> {
         .select('*')
         .gte('date', firstDayLastMonth.toISOString())
         .lte('date', lastDayLastMonth.toISOString())
-        .order('date', { ascending: false });
+        .order('clicks', { ascending: false })
+        .limit(8);
 
     if (error) {
         console.error('Supabase error:', error);
@@ -44,7 +46,7 @@ export async function getPreviousMonthArticles(): Promise<NewsItem[]> {
         return [];
     }
 
-    console.log(`Found ${articles.length} articles for the previous month`);
+    console.log(`Found ${articles.length} most clicked articles for the previous month`);
 
     // Format the articles for the newsletter
     return articles.map(article => ({
@@ -57,6 +59,7 @@ export async function getPreviousMonthArticles(): Promise<NewsItem[]> {
         excerpt: article.summary || article.body?.substring(0, 150) + '...' || article.title,
         link: article.url,
         type: article.type,
-        summary: article.summary
+        // summary: article.summary,
+        clicks: article.clicks || 0 // Include click count, default to 0 if null
     }));
 }

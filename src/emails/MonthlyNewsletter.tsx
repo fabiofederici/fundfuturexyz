@@ -17,8 +17,8 @@ import * as React from 'react';
 interface NewsItem {
     title: string;
     date: string;
-    excerpt: string;
     link: string;
+    clicks: number;
 }
 
 interface MonthlyNewsletterProps {
@@ -59,9 +59,11 @@ export const MonthlyNewsletter = ({
                                 <Heading as="h2" style={newsTitle}>
                                     {item.title}
                                 </Heading>
-                                <Text style={newsExcerpt}>{item.excerpt}</Text>
                                 <Button style={button} href={item.link}>
                                     Read More
+                                </Button>
+                                <Button className="bg-red-400" href={item.link}>
+                                    {item.clicks} Clicks
                                 </Button>
                                 {index < newsItems.length - 1 && <Hr style={hr} />}
                             </Section>
@@ -130,13 +132,6 @@ const newsTitle = {
     lineHeight: '1.4',
     color: '#484848',
     marginBottom: '8px',
-};
-
-const newsExcerpt = {
-    fontSize: '16px',
-    lineHeight: '1.4',
-    color: '#484848',
-    marginBottom: '16px',
 };
 
 const button = {

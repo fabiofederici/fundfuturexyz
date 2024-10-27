@@ -2,5 +2,10 @@
   "crons": [{
     "path": "/api/cron/update-news",
     "schedule": "0 10 * * *"
-  }]
+  },
+    {
+      "path": "/api/cron/monthly-newsletter",
+      "schedule": "0 16 1 * *"
+    }
+  ]
 }
