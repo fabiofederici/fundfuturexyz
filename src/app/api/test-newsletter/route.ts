@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { MonthlyNewsletter } from '@/emails/MonthlyNewsletter';
+import { getPreviousMonthArticles } from '@/lib/get-articles';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -34,15 +35,16 @@ export async function POST(request: Request) {
         const month = today.toLocaleString('default', { month: 'long' });
         const year = today.getFullYear().toString();
 
-        // Sample news items for testing
-        const newsItems = [
-            {
-                title: "Test News Item",
-                date: new Date().toLocaleDateString(),
-                excerpt: "This is a test news item for the newsletter preview...",
-                link: "https://your-site.com/news/test"
-            },
-        ];
+        // Get the articles from the previous month for testing
+        const newsItems = await getPreviousMonthArticles();
+        console.log(`Found ${newsItems.length} articles for newsletter test`);
+
+        // Group articles by type for logging
+        const articleTypes = newsItems.reduce((acc, item) => {
+            acc[item.type] = (acc[item.type] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+        console.log('Article types:', articleTypes);
 
         // Get audience ID and add 'aud_' prefix if not present
         const audienceId = process.env.RESEND_AUDIENCE_ID;
@@ -73,7 +75,7 @@ export async function POST(request: Request) {
                 month,
                 year,
                 newsItems,
-                previewText: `Test - Your ${month} ${year} News Roundup`
+                previewText: `Test - Your ${month} ${year} News Roundup - ${newsItems.length} Updates`
             }) as React.ReactElement,
         }) as ResendResponse;
 
@@ -84,6 +86,10 @@ export async function POST(request: Request) {
         return NextResponse.json({
             success: true,
             message: 'Test newsletter sent successfully',
+            details: {
+                articleCount: newsItems.length,
+                articleTypes
+            },
             id: (result as ResendSuccessResponse).id
         });
 

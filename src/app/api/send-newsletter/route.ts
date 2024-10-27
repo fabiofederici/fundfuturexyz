@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { MonthlyNewsletter } from '@/emails/MonthlyNewsletter';
+import { getPreviousMonthArticles } from '@/lib/get-articles';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -42,23 +43,27 @@ export async function POST() {
         const month = lastMonth.toLocaleString('default', { month: 'long' });
         const year = lastMonth.getFullYear().toString();
 
-        // TODO: Replace this with your actual news fetching logic
-        const newsItems = [
-            {
-                title: "Example News Item 1",
-                date: "October 15, 2023",
-                excerpt: "This is an example news item from last month...",
-                link: "https://your-site.com/news/1"
-            },
-        ];
+        // Get the articles from the previous month
+        const newsItems = await getPreviousMonthArticles();
 
-        // Get all subscribers from your Resend audience
+        // Log for debugging
+        console.log(`Found ${newsItems.length} articles for ${month} ${year}`);
+        newsItems.forEach(item => console.log(`- ${item.date}: ${item.title} (${item.type})`));
+
+        // Validate we have content
+        if (newsItems.length === 0) {
+            console.log('No articles found for the previous month');
+            return NextResponse.json({
+                success: false,
+                message: 'No articles found for the previous month'
+            }, { status: 404 });
+        }
+
+        // Get audience ID and add 'aud_' prefix if not present
         const audienceId = process.env.RESEND_AUDIENCE_ID;
         if (!audienceId) {
             throw new Error('Resend Audience ID is not configured');
         }
-
-        // Add 'aud_' prefix if not present
         const fullAudienceId = audienceId.startsWith('aud_') ? audienceId : `aud_${audienceId}`;
         console.log('Fetching contacts for audience:', fullAudienceId);
 
@@ -91,14 +96,14 @@ export async function POST() {
                 try {
                     console.log(`Sending to ${subscriber.email}...`);
                     const result = await resend.emails.send({
-                        from: 'Your Newsletter <newsletter@yourdomain.com>',
+                        from: 'Your Newsletter <newsletter@fundfuture.xyz>',
                         to: subscriber.email,
                         subject: `${month} ${year} Newsletter`,
                         react: MonthlyNewsletter({
                             month,
                             year,
                             newsItems,
-                            previewText: `Your ${month} ${year} News Roundup`
+                            previewText: `Your ${month} ${year} News Roundup - ${newsItems.length} Updates`
                         }) as React.ReactElement,
                     }) as ResendResponse;
 
@@ -127,9 +132,19 @@ export async function POST() {
         const successfulSends = results.filter((result): result is SendResult & { success: true } => result.success);
         const failedSends = results.filter((result): result is SendResult & { success: false } => !result.success);
 
+        // Return detailed response
         return NextResponse.json({
             success: true,
             message: `Newsletter sent to ${successfulSends.length} subscribers (${failedSends.length} failed)`,
+            details: {
+                month,
+                year,
+                articleCount: newsItems.length,
+                articleTypes: newsItems.reduce((acc, item) => {
+                    acc[item.type] = (acc[item.type] || 0) + 1;
+                    return acc;
+                }, {} as Record<string, number>)
+            },
             results: {
                 successful: successfulSends,
                 failed: failedSends
