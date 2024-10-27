@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
         // Send test newsletter
         const result = await resend.emails.send({
-            from: 'Your Newsletter <newsletter@yourdomain.com>',
+            from: 'Your Newsletter <newsletter@fundfuture.xyz>',
             to: email,
             subject: `Test - ${month} ${year} Newsletter`,
             react: MonthlyNewsletter({
