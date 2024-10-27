@@ -6,9 +6,12 @@ import { MonthlyNewsletter } from '@/emails/MonthlyNewsletter';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface Contact {
-    email: string;
     id: string;
+    email: string;
+    first_name?: string;
+    last_name?: string;
     created_at: string;
+    unsubscribed: boolean;
 }
 
 interface SendResult {
@@ -31,11 +34,7 @@ interface ResendErrorResponse {
 
 type ResendResponse = ResendSuccessResponse | ResendErrorResponse;
 
-export async function POST(request: Request) {
-    // Add a comment to prevent the linting error
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _unusedRequest = request;
-
+export async function POST() {
     try {
         // Get the previous month's data
         const today = new Date();
@@ -54,21 +53,26 @@ export async function POST(request: Request) {
         ];
 
         // Get all subscribers from your Resend audience
-        const audienceId = process.env.RESEND_AUDIENCE_ID?.replace('aud_', '');
+        const audienceId = process.env.RESEND_AUDIENCE_ID;
         if (!audienceId) {
             throw new Error('Resend Audience ID is not configured');
         }
 
-        // Get the list of subscribers
-        const audienceResponse = await resend.contacts.list({
-            audienceId
-        });
+        // Add 'aud_' prefix if not present
+        const fullAudienceId = audienceId.startsWith('aud_') ? audienceId : `aud_${audienceId}`;
+        console.log('Fetching contacts for audience:', fullAudienceId);
 
-        if ('error' in audienceResponse && audienceResponse.error) {
-            throw new Error(`Failed to fetch audience: ${audienceResponse.error.message}`);
+        // Get the list of subscribers
+        const response = await resend.contacts.list({ audienceId: fullAudienceId });
+
+        // Early validation of the response
+        if (!response || !('data' in response) || !Array.isArray(response.data)) {
+            console.error('Invalid response from Resend:', response);
+            throw new Error('Invalid response from Resend API');
         }
 
-        const subscribers = (audienceResponse.data || []) as Contact[];
+        const subscribers = response.data as Contact[];
+        console.log(`Found ${subscribers.length} subscribers`);
 
         if (subscribers.length === 0) {
             return NextResponse.json({
@@ -77,10 +81,15 @@ export async function POST(request: Request) {
             }, { status: 404 });
         }
 
+        // Filter out unsubscribed contacts
+        const activeSubscribers = subscribers.filter(sub => !sub.unsubscribed);
+        console.log(`${activeSubscribers.length} active subscribers after filtering`);
+
         // Send the newsletter to each subscriber
         const results: SendResult[] = await Promise.all(
-            subscribers.map(async (subscriber): Promise<SendResult> => {
+            activeSubscribers.map(async (subscriber): Promise<SendResult> => {
                 try {
+                    console.log(`Sending to ${subscriber.email}...`);
                     const result = await resend.emails.send({
                         from: 'Your Newsletter <newsletter@yourdomain.com>',
                         to: subscriber.email,
@@ -94,9 +103,10 @@ export async function POST(request: Request) {
                     }) as ResendResponse;
 
                     if ('error' in result && result.error) {
-                        throw new Error(result.error.message);
+                        throw new Error(result.error.message || 'Failed to send email');
                     }
 
+                    console.log(`Successfully sent to ${subscriber.email}`);
                     return {
                         email: subscriber.email,
                         success: true,
@@ -132,6 +142,7 @@ export async function POST(request: Request) {
             {
                 success: false,
                 message: error instanceof Error ? error.message : 'Failed to send newsletter',
+                error: error instanceof Error ? error.stack : undefined
             },
             { status: 500 }
         );
