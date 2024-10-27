@@ -1,4 +1,3 @@
-// src/app/api/cron/update-news/route.ts
 import { NewsService } from '@/lib/news-service';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
@@ -6,7 +5,8 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-export async function POST() {
+// Common handler function for both GET and POST
+async function handleRequest() {
     try {
         const headersList = await headers();
         const authHeader = headersList.get('authorization');
@@ -30,3 +30,7 @@ export async function POST() {
         );
     }
 }
+
+// Support both GET and POST methods
+export const GET = handleRequest;
+export const POST = handleRequest;
