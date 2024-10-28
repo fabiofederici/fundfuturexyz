@@ -21,7 +21,7 @@ const isValidTwitterConfig = (): { valid: boolean; missing: string[] } => {
     };
 };
 
-export async function GET() {
+async function handleRequest() {
     try {
         // Verify internal API key
         const headersList = await headers();
@@ -40,7 +40,7 @@ export async function GET() {
             }, { status: 500 });
         }
 
-        // Create thread for top article from previous day
+        // Create thread for top article
         const result = await createDailyTopArticleThread({
             apiKey: process.env.TWITTER_API_KEY!,
             apiKeySecret: process.env.TWITTER_API_KEY_SECRET!,
@@ -78,3 +78,7 @@ export async function GET() {
         }, { status: 500 });
     }
 }
+
+// Support both GET and POST methods
+export const GET = handleRequest;
+export const POST = handleRequest;

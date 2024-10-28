@@ -5,12 +5,12 @@ import { headers } from 'next/headers';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-async function makeInternalRequest(path: string) {
+async function makeInternalRequest(path: string, method: 'GET' | 'POST' = 'POST') {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const url = `${baseUrl}${path}`;
 
     const response = await fetch(url, {
-        method: 'POST',
+        method,
         headers: {
             'Authorization': `Bearer ${process.env.CRON_SECRET}`,
             'x-internal-token': process.env.INTERNAL_API_KEY || '',
@@ -37,11 +37,11 @@ export async function POST() {
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
-        // Execute both tasks in parallel
+        // Execute both tasks - use POST for news update and GET for tweet
         const startTime = Date.now();
         const [newsResult, tweetResult] = await Promise.allSettled([
-            makeInternalRequest('/api/cron/update-news'),
-            makeInternalRequest('/api/tweet')
+            makeInternalRequest('/api/cron/update-news', 'POST'),
+            makeInternalRequest('/api/tweet', 'GET')
         ]);
 
         // Process results
@@ -80,6 +80,4 @@ export async function POST() {
     }
 }
 
-export async function GET() {
-    return POST();
-}
+export const GET = POST;
