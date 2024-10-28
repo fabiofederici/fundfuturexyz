@@ -121,8 +121,11 @@ export async function POST(request: Request) {
                     year,
                     newsItems,
                     previewText: `The latest in onchain funds & tokenization news.`
-                    // previewText: `${month} onchain funds & tokenization news. - ${newsItems.length} Updates`
-                }) as React.ReactElement
+                }) as React.ReactElement,
+                headers: {
+                    'List-Unsubscribe': `<${process.env.NEXT_PUBLIC_SITE_URL}/api/unsubscribe?email=${encodeURIComponent(subscriber.email)}>`,
+                    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+                }
             }));
 
             console.log(`Sending batch of ${emailBatch.length} emails...`);
