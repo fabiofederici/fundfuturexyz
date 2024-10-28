@@ -4,7 +4,27 @@ import { headers } from 'next/headers';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // 5 minutes
+export const maxDuration = 60;
+
+async function getBaseUrl(request: Request): Promise<string> {
+    // First try from request
+    const url = new URL(request.url);
+    if (url.origin !== 'null') {
+        return url.origin;
+    }
+
+    // Fallback to environment variables
+    if (process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL}`;
+    }
+
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
+        return process.env.NEXT_PUBLIC_SITE_URL;
+    }
+
+    // Local development fallback
+    return 'http://localhost:3000';
+}
 
 export async function GET(request: Request) {
     try {
@@ -17,20 +37,34 @@ export async function GET(request: Request) {
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
-        // Get the origin from the request URL
-        const origin = new URL(request.url).origin;
+        const baseUrl = await getBaseUrl(request);
+        const newsletterUrl = `${baseUrl}/api/send-newsletter`;
 
-        // Call the newsletter endpoint with authorization
-        const response = await fetch(`${origin}/api/send-newsletter`, {
+        console.log('Attempting to fetch newsletter from:', newsletterUrl);
+
+        const response = await fetch(newsletterUrl, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${process.env.CRON_SECRET}`
+                'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
         });
 
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(`Newsletter API failed with status ${response.status}: ${text}`);
+        }
+
+        // Ensure we're getting JSON back
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Expected JSON response but got ${contentType}: ${text}`);
+        }
+
         const result = await response.json();
 
-        // Log the result
         console.log('Monthly newsletter cron completed:', result);
 
         return NextResponse.json({
@@ -40,7 +74,11 @@ export async function GET(request: Request) {
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        console.error('Monthly newsletter cron failed:', error);
+        console.error('Monthly newsletter cron failed:', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            timestamp: new Date().toISOString()
+        });
+
         return NextResponse.json({
             success: false,
             error: error instanceof Error ? error.message : 'Monthly newsletter cron failed',
