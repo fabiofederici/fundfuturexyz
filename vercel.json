@@ -1,6 +1,6 @@
 {
   "crons": [{
-    "path": "/api/cron/update-news",
+    "path": "/api/cron/daily-tasks",
     "schedule": "0 10 * * *"
   },
     {
