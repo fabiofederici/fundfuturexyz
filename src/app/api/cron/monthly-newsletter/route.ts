@@ -7,19 +7,20 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 async function getBaseUrl(request: Request): Promise<string> {
-    // First try from request
-    const url = new URL(request.url);
-    if (url.origin !== 'null') {
-        return url.origin;
+    // For production deployments, always use NEXT_PUBLIC_SITE_URL
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
+        return process.env.NEXT_PUBLIC_SITE_URL;
     }
 
-    // Fallback to environment variables
+    // For preview deployments
     if (process.env.VERCEL_URL) {
         return `https://${process.env.VERCEL_URL}`;
     }
 
-    if (process.env.NEXT_PUBLIC_SITE_URL) {
-        return process.env.NEXT_PUBLIC_SITE_URL;
+    // Fallback to request URL
+    const url = new URL(request.url);
+    if (url.origin !== 'null') {
+        return url.origin;
     }
 
     // Local development fallback
