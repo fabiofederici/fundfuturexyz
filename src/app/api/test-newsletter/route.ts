@@ -68,15 +68,16 @@ export async function POST(request: Request) {
 
         // Send test newsletter
         const result = await resend.emails.send({
-            from: 'Your Newsletter <newsletter@fundfuture.xyz>',
+            from: 'FundFuture <digest@fundfuture.xyz>',
             to: email,
-            subject: `Test - ${month} ${year} Newsletter`,
+            subject: `${month} ${year} Digest`,
             react: MonthlyNewsletter({
                 month,
                 year,
                 newsItems,
-                previewText: `Test - Your ${month} ${year} News Roundup - ${newsItems.length} Updates`
-            }) as React.ReactElement,
+                previewText: `The latest in onchain funds & tokenization news.`
+                // previewText: `${month} onchain funds & tokenization news. - ${newsItems.length} Updates`
+            }) as React.ReactElement
         }) as ResendResponse;
 
         if ('error' in result && result.error) {

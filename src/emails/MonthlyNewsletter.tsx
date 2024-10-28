@@ -34,7 +34,7 @@ export const MonthlyNewsletter = ({
                                       newsItems,
                                       previewText,
                                   }: MonthlyNewsletterProps) => {
-    const defaultPreviewText = `Your ${month} ${year} News Roundup`;
+    const defaultPreviewText = `${month} onchain funds & tokenization news.`;
 
     return (
         <Html>
@@ -44,10 +44,13 @@ export const MonthlyNewsletter = ({
                 <Container style={container}>
                     {/* Header */}
                     <Heading style={header}>
-                        Monthly Newsletter
+                        FundFuture | {month} {year} News Roundup
                     </Heading>
+                    {/*<Text style={subheader}>*/}
+                    {/*    {month} {year} News Roundup*/}
+                    {/*</Text>*/}
                     <Text style={subheader}>
-                        {month} {year} News Roundup
+                        The latest in onchain funds & tokenization news.
                     </Text>
                     <Hr style={hr} />
 
@@ -55,30 +58,29 @@ export const MonthlyNewsletter = ({
                     <Section style={newsSection}>
                         {newsItems.map((item, index) => (
                             <Section key={index} style={newsItem}>
-                                <Text style={newsDate}>{item.date}</Text>
+                                <Text style={newsDate}>{item.date} | {item.clicks} Clicks | <a href={item.link} style={newsLink}>Read More</a></Text>
                                 <Heading as="h2" style={newsTitle}>
                                     {item.title}
                                 </Heading>
-                                <Button style={button} href={item.link}>
-                                    Read More
-                                </Button>
-                                <Button className="bg-red-400" href={item.link}>
-                                    {item.clicks} Clicks
-                                </Button>
                                 {index < newsItems.length - 1 && <Hr style={hr} />}
                             </Section>
                         ))}
                     </Section>
 
+                    <Button style={button} href="https://fundfuture.xyz/" target="_blank">Go To The FundFuture</Button>
+
                     {/* Footer */}
                     <Hr style={hr} />
                     <Section style={footer}>
                         <Text style={footerText}>
-                            You&apos;re receiving this email because you subscribed to our newsletter.
+                            You&apos;re receiving this email because you subscribed to our newsletter. &nbsp;
+                            <Link href="{{unsubscribe}}" style={footerLink}>
+                                Unsubscribe
+                            </Link>
                         </Text>
-                        <Link href="{{unsubscribe}}" style={footerLink}>
-                            Unsubscribe
-                        </Link>
+                        <Text style={footerText}>
+                            © {new Date().getFullYear()} FundFuture
+                        </Text>
                     </Section>
                 </Container>
             </Body>
@@ -88,44 +90,52 @@ export const MonthlyNewsletter = ({
 
 // Styles
 const main = {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fefefe',
     fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
 };
 
 const container = {
     margin: '0 auto',
-    padding: '20px 0 48px',
+    padding: '14px 0 14px',
     maxWidth: '600px',
 };
 
 const header = {
     fontSize: '24px',
     lineHeight: '1.3',
-    fontWeight: '700',
-    textAlign: 'center' as const,
+    fontWeight: '600',
+    textAlign: 'left' as const,
     color: '#484848',
 };
 
+const newsLink = {
+    color: '#010101',
+    textDecoration: 'none',
+    fontweight: '600',
+}
+
 const subheader = {
-    fontSize: '18px',
+    fontSize: '16px',
     lineHeight: '1.4',
-    textAlign: 'center' as const,
+    textAlign: 'left' as const,
     color: '#484848',
 };
 
 const newsSection = {
-    padding: '20px 0',
+    padding: '14px 0',
 };
 
 const newsItem = {
-    marginBottom: '24px',
+    marginBottom: '14px',
 };
 
 const newsDate = {
     fontSize: '14px',
     color: '#666666',
     marginBottom: '8px',
+    textDecoration: 'none',
 };
+
 
 const newsTitle = {
     fontSize: '20px',
@@ -135,9 +145,9 @@ const newsTitle = {
 };
 
 const button = {
-    backgroundColor: '#5c6ac4',
-    borderRadius: '3px',
-    color: '#fff',
+    backgroundColor: '#010101',
+    borderRadius: '0px',
+    color: '#fefefe',
     fontSize: '16px',
     textDecoration: 'none',
     textAlign: 'center' as const,
@@ -148,11 +158,11 @@ const button = {
 
 const hr = {
     borderColor: '#e6ebf1',
-    margin: '20px 0',
+    margin: '14px 0',
 };
 
 const footer = {
-    textAlign: 'center' as const,
+    textAlign: 'left' as const,
     color: '#706a7b',
 };
 
@@ -164,7 +174,7 @@ const footerText = {
 
 const footerLink = {
     fontSize: '14px',
-    color: '#5c6ac4',
+    color: '#010101',
 };
 
 export default MonthlyNewsletter;

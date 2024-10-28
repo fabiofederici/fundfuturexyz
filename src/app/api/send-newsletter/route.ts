@@ -113,14 +113,15 @@ export async function POST(request: Request) {
 
             // Prepare batch of emails
             const emailBatch = subscribers.map(subscriber => ({
-                from: 'Your Newsletter <newsletter@fundfuture.xyz>',
+                from: 'FundFuture <digest@fundfuture.xyz>',
                 to: subscriber.email,
-                subject: `${month} ${year} Newsletter`,
+                subject: `${month} ${year} Digest`,
                 react: MonthlyNewsletter({
                     month,
                     year,
                     newsItems,
-                    previewText: `Your ${month} ${year} News Roundup - ${newsItems.length} Updates`
+                    previewText: `The latest in onchain funds & tokenization news.`
+                    // previewText: `${month} onchain funds & tokenization news. - ${newsItems.length} Updates`
                 }) as React.ReactElement
             }));
 
