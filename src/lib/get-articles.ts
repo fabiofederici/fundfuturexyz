@@ -12,44 +12,53 @@ interface NewsItem {
     excerpt: string;
     link: string;
     type: string;
-    // summary: string;
     clicks: number;
 }
 
+function normalizeTitle(title: string): string {
+    return title
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/ - decrypt$/, '')
+        .replace(/ \| investing\.com$/, '')
+        .replace(/: report$/, '')
+        .replace(/ by investing\.com$/, '')
+        .replace(/^breaking:?\s*/i, '')
+        .replace(/^update:?\s*/i, '');
+}
+
 export async function getPreviousMonthArticles(): Promise<NewsItem[]> {
-    // Get date range for previous month
     const today = new Date();
     const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59);
 
-    console.log('Fetching most clicked articles between:', {
-        start: firstDayLastMonth.toISOString(),
-        end: lastDayLastMonth.toISOString()
-    });
-
-    // Fetch articles from Supabase
     const { data: articles, error } = await supabase
         .from('news_items')
         .select('*')
         .gte('date', firstDayLastMonth.toISOString())
         .lte('date', lastDayLastMonth.toISOString())
         .order('clicks', { ascending: false })
-        .limit(8);
+        .limit(50);
 
-    if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-    }
+    if (error) throw error;
+    if (!articles?.length) return [];
 
-    if (!articles) {
-        console.log('No articles found for the period');
-        return [];
-    }
+    const uniqueTitles = new Map();
+    articles.forEach(article => {
+        const normalizedTitle = normalizeTitle(article.title);
+        if (!uniqueTitles.has(normalizedTitle) ||
+            (article.clicks || 0) > (uniqueTitles.get(normalizedTitle).clicks || 0)) {
+            uniqueTitles.set(normalizedTitle, article);
+        }
+    });
 
-    console.log(`Found ${articles.length} most clicked articles for the previous month`);
+    const uniqueArticles = Array.from(uniqueTitles.values())
+        .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
+        .slice(0, 8);
 
-    // Format the articles for the newsletter
-    return articles.map(article => ({
+    return uniqueArticles.map(article => ({
         title: article.title,
         date: new Date(article.date).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -59,7 +68,6 @@ export async function getPreviousMonthArticles(): Promise<NewsItem[]> {
         excerpt: article.summary || article.body?.substring(0, 150) + '...' || article.title,
         link: article.url,
         type: article.type,
-        // summary: article.summary,
-        clicks: article.clicks || 0 // Include click count, default to 0 if null
+        clicks: article.clicks || 0
     }));
 }

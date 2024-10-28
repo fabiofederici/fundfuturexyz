@@ -7,29 +7,51 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+function normalizeTitle(title: string): string {
+    return title
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/ - decrypt$/, '')
+        .replace(/ \| investing\.com$/, '')
+        .replace(/: report$/, '')
+        .replace(/ by investing\.com$/, '')
+        .replace(/^breaking:?\s*/i, '')
+        .replace(/^update:?\s*/i, '');
+}
+
 export async function GET() {
     try {
-        console.log('Fetching latest 20 items from Supabase');
-
-        // Single optimized query
         const { data: articles, error } = await supabase
             .from('news_items')
             .select('*')
             .order('date', { ascending: false })
-            .limit(20);
+            .limit(100);
 
         if (error) throw error;
 
-        console.log('Fetched articles count:', articles?.length || 0);
+        const uniqueTitles = new Map();
+        articles.forEach(article => {
+            const normalizedTitle = normalizeTitle(article.title);
+            if (!uniqueTitles.has(normalizedTitle) ||
+                new Date(article.date) > new Date(uniqueTitles.get(normalizedTitle).date)) {
+                uniqueTitles.set(normalizedTitle, article);
+            }
+        });
 
-        const formattedResults = articles.map(article => ({
+        const uniqueArticles = Array.from(uniqueTitles.values())
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .slice(0, 20);
+
+        const formattedResults = uniqueArticles.map(article => ({
             title: article.title,
             type: article.type,
             url: article.url,
             body: article.body,
             summary: article.summary,
             date: article.date,
-            source: 'supabase'  // Keep this for verification
+            source: 'supabase'
         }));
 
         return NextResponse.json({
@@ -44,7 +66,7 @@ export async function GET() {
         }, {
             headers: {
                 'X-Data-Source': 'supabase',
-                'X-Data-Count': articles.length.toString()
+                'X-Data-Count': formattedResults.length.toString()
             }
         });
 
