@@ -40,7 +40,9 @@ export async function GET(request: Request) {
         const baseUrl = await getBaseUrl(request);
         const newsletterUrl = `${baseUrl}/api/send-newsletter`;
 
-        console.log('Attempting to fetch newsletter from:', newsletterUrl);
+        console.log('INTERNAL_API_KEY exists:', !!process.env.INTERNAL_API_KEY);
+        console.log('CRON_SECRET exists:', !!process.env.CRON_SECRET);
+        console.log('Newsletter URL:', newsletterUrl);
 
         const requestHeaders = {
             'Authorization': `Bearer ${process.env.CRON_SECRET}`,
@@ -48,6 +50,13 @@ export async function GET(request: Request) {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         } as const;
+
+        console.log('Request headers:', {
+            'Authorization': requestHeaders.Authorization ? 'Bearer [REDACTED]' : 'undefined',
+            'x-internal-token': requestHeaders['x-internal-token'] ? '[REDACTED]' : 'undefined',
+            'Content-Type': requestHeaders['Content-Type'],
+            'Accept': requestHeaders.Accept
+        });
 
         const response = await fetch(newsletterUrl, {
             method: 'POST',
