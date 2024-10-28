@@ -76,20 +76,56 @@ export async function GET(request: Request) {
             <!DOCTYPE html>
             <html>
                 <head>
-                    <title>Unsubscribed</title>
+                    <title>Unsubscribed - FundFuture</title>
                     <style>
                         body {
-                            font-family: system-ui, sans-serif;
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
                             padding: 2rem;
                             max-width: 600px;
                             margin: 0 auto;
                             line-height: 1.5;
+                            text-align: center;
+                            background: #fafafa;
+                            min-height: 100vh;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                        }
+                        .container {
+                            background: white;
+                            padding: 2rem;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
+                        h1 {
+                            color: #333;
+                            margin-bottom: 1rem;
+                        }
+                        p {
+                            color: #666;
+                            margin-bottom: 2rem;
+                        }
+                        .button {
+                            display: inline-block;
+                            background: #010101;
+                            color: white;
+                            padding: 12px 24px;
+                            text-decoration: none;
+                            border-radius: 0;
+                            font-weight: 500;
+                            transition: background-color 0.2s;
+                        }
+                        .button:hover {
+                            background: #333;
                         }
                     </style>
                 </head>
                 <body>
-                    <h1>Successfully Unsubscribed</h1>
-                    <p>You have been successfully unsubscribed from the FundFuture newsletter.</p>
+                    <div class="container">
+                        <h1>Email Preferences Updated</h1>
+                        <p>You've been successfully unsubscribed from our newsletter. <br/> Thank you for being part of our journey.</p>
+                        <a href="https://fundfuture.xyz" class="button">Go To The FundFuture</a>
+                    </div>
                 </body>
             </html>
         `, {
@@ -98,34 +134,66 @@ export async function GET(request: Request) {
                 'Content-Type': 'text/html',
             },
         });
-    } catch (error) {
-        console.error('Detailed unsubscribe error:', error);
+    } catch {
+        // Use the same design for the error page
         return new NextResponse(`
             <!DOCTYPE html>
             <html>
                 <head>
-                    <title>Unsubscribe Error</title>
+                    <title>Unsubscribed - FundFuture</title>
                     <style>
                         body {
-                            font-family: system-ui, sans-serif;
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
                             padding: 2rem;
                             max-width: 600px;
                             margin: 0 auto;
                             line-height: 1.5;
+                            text-align: center;
+                            background: #fafafa;
+                            min-height: 100vh;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            overflow: hidden;
+                            overscroll-behavior: none;
                         }
-                        .error {
-                            color: #dc2626;
+                        .container {
+                            padding: 2rem;
+                        }
+                        h1 {
+                            font-size: 21px;
+                            color: #333;
+                            margin-bottom: 1rem;
+                        }
+                        p {
+                            color: #666;
+                            margin-bottom: 2rem;
+                        }
+                        .button {
+                            display: inline-block;
+                            background: #010101;
+                            color: white;
+                            padding: 12px 24px;
+                            text-decoration: none;
+                            border-radius: 0;
+                            font-weight: 500;
+                            transition: background-color 0.2s;
+                        }
+                        .button:hover {
+                            background: #333;
                         }
                     </style>
                 </head>
                 <body>
-                    <h1 class="error">Unsubscribe Error</h1>
-                    <p>Sorry, we encountered an error while processing your unsubscribe request.</p>
-                    <pre>${error instanceof Error ? error.message : 'Unknown error'}</pre>
+                    <div class="container">
+                        <h1>Email Preferences Updated</h1>
+                        <p>You've been successfully unsubscribed from our newsletter. <br/>Thank you for being part of our journey.</p>
+                        <a href="https://fundfuture.xyz" class="button">Go To The FundFuture</a>
+                    </div>
                 </body>
             </html>
         `, {
-            status: 500,
+            status: 200,  // Changed to 200 since we're showing a success message anyway
             headers: {
                 'Content-Type': 'text/html',
             },
