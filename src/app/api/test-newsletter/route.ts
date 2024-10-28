@@ -66,18 +66,27 @@ export async function POST(request: Request) {
             // Continue even if this fails - the email might already be in the audience
         }
 
+        const getUnsubscribeUrl = (email: string) =>
+            `${process.env.NEXT_PUBLIC_SITE_URL}/api/unsubscribe?email=${encodeURIComponent(email).replace(/\+/g, '%2B')}`;
+
         // Send test newsletter
         const result = await resend.emails.send({
             from: 'FundFuture <digest@fundfuture.xyz>',
             to: email,
-            subject: `${month} ${year} Digest`,
+            subject: `${month} ${year} Digest Test`,
             react: MonthlyNewsletter({
                 month,
                 year,
                 newsItems,
-                previewText: `The latest in onchain funds & tokenization news.`
+                previewText: `The latest in onchain funds & tokenization news.`,
+                unsubscribeUrl: getUnsubscribeUrl(email)  // Use email instead of subscriber.email
                 // previewText: `${month} onchain funds & tokenization news. - ${newsItems.length} Updates`
-            }) as React.ReactElement
+            }) as React.ReactElement,
+            text: `${month} ${year} Digest - FundFuture Newsletter`,
+            headers: {
+                'List-Unsubscribe': `<${getUnsubscribeUrl(email)}>`,  // Use email here too
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+            }
         }) as ResendResponse;
 
         if ('error' in result && result.error) {

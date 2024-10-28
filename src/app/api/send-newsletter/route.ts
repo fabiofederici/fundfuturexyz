@@ -111,6 +111,9 @@ export async function POST(request: Request) {
                 }, { status: 404 });
             }
 
+            const getUnsubscribeUrl = (email: string) =>
+                `${process.env.NEXT_PUBLIC_SITE_URL}/api/unsubscribe?email=${encodeURIComponent(email).replace(/\+/g, '%2B')}`;
+
             // Prepare batch of emails
             const emailBatch = subscribers.map(subscriber => ({
                 from: 'FundFuture <digest@fundfuture.xyz>',
@@ -120,10 +123,12 @@ export async function POST(request: Request) {
                     month,
                     year,
                     newsItems,
-                    previewText: `The latest in onchain funds & tokenization news.`
+                    previewText: `The latest in onchain funds & tokenization news.`,
+                    unsubscribeUrl: getUnsubscribeUrl(subscriber.email)
                 }) as React.ReactElement,
+                text: `${month} ${year} Digest - FundFuture`,
                 headers: {
-                    'List-Unsubscribe': `<${process.env.NEXT_PUBLIC_SITE_URL}/api/unsubscribe?email=${encodeURIComponent(subscriber.email)}>`,
+                    'List-Unsubscribe': `<${getUnsubscribeUrl(subscriber.email)}>`,
                     'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
                 }
             }));

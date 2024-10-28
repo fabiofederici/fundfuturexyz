@@ -7,10 +7,9 @@ import {
     Heading,
     Hr,
     Html,
-    Link,
     Preview,
     Section,
-    Text,
+    Text
 } from '@react-email/components';
 import * as React from 'react';
 
@@ -26,6 +25,7 @@ interface MonthlyNewsletterProps {
     year: string;
     newsItems: NewsItem[];
     previewText?: string;
+    unsubscribeUrl: string;
 }
 
 export const MonthlyNewsletter = ({
@@ -33,6 +33,7 @@ export const MonthlyNewsletter = ({
                                       year,
                                       newsItems,
                                       previewText,
+                                      unsubscribeUrl,
                                   }: MonthlyNewsletterProps) => {
     const defaultPreviewText = `${month} onchain funds & tokenization news.`;
 
@@ -75,14 +76,13 @@ export const MonthlyNewsletter = ({
                         <Text style={footerText}>
                             You&apos;re receiving this email because you subscribed to our newsletter.
                             <br/>
-                            <Link
-                                href="*|UNSUB|*"
-                                data-id="click-me"
+                            <a
+                                href={unsubscribeUrl}
                                 style={footerLink}
                             >
-                                Unsubscribe
-                            </Link>
-                        </Text>
+                            Unsubscribe
+                        </a>
+                    </Text>
                         <Text style={footerText}>
                             © {new Date().getFullYear()} FundFuture
                         </Text>
