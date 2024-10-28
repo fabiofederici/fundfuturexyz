@@ -44,7 +44,7 @@ export const MonthlyNewsletter = ({
                 <Container style={container}>
                     {/* Header */}
                     <Heading style={header}>
-                        FundFuture | {month} {year} News Roundup
+                        FundFuture | {month} {year} Digest
                     </Heading>
                     {/*<Text style={subheader}>*/}
                     {/*    {month} {year} News Roundup*/}
@@ -73,7 +73,8 @@ export const MonthlyNewsletter = ({
                     <Hr style={hr} />
                     <Section style={footer}>
                         <Text style={footerText}>
-                            You&apos;re receiving this email because you subscribed to our newsletter. &nbsp;
+                            You&apos;re receiving this email because you subscribed to our newsletter.
+                            <br/>
                             <Link href="{{unsubscribe}}" style={footerLink}>
                                 Unsubscribe
                             </Link>
@@ -97,13 +98,13 @@ const main = {
 const container = {
     margin: '0 auto',
     padding: '14px 0 14px',
-    maxWidth: '600px',
+    maxWidth: '500px',
 };
 
 const header = {
-    fontSize: '24px',
+    fontSize: '21px',
     lineHeight: '1.3',
-    fontWeight: '600',
+    fontWeight: '500',
     textAlign: 'left' as const,
     color: '#484848',
 };
@@ -111,7 +112,7 @@ const header = {
 const newsLink = {
     color: '#010101',
     textDecoration: 'none',
-    fontweight: '600',
+    fontWeight: '500',
 }
 
 const subheader = {
@@ -142,6 +143,7 @@ const newsTitle = {
     lineHeight: '1.4',
     color: '#484848',
     marginBottom: '8px',
+    fontWeight: '600',
 };
 
 const button = {
