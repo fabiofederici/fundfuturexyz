@@ -75,7 +75,7 @@ export const MonthlyNewsletter = ({
                         <Text style={footerText}>
                             You&apos;re receiving this email because you subscribed to our newsletter.
                             <br/>
-                            <Link href="{{unsubscribe}}" style={footerLink}>
+                            <Link href="{{{ unsubscribe }}}" style={footerLink}>
                                 Unsubscribe
                             </Link>
                         </Text>
