@@ -45,7 +45,7 @@ export async function GET(request: Request) {
         const response = await fetch(newsletterUrl, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+                'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
