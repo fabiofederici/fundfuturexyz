@@ -37,9 +37,9 @@ export default function TestNewsletterPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-100 py-20 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md mx-auto">
-                <div className="bg-white p-8 rounded-lg shadow">
+                <div className="bg-white p-8">
                     <h1 className="text-2xl font-bold mb-6">Test Newsletter</h1>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -52,7 +52,7 @@ export default function TestNewsletterPage() {
                                 id="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                className="mt-1 block w-full border p-2"
                                 placeholder="Enter your email"
                                 required
                             />
@@ -63,8 +63,8 @@ export default function TestNewsletterPage() {
                             disabled={status === 'loading'}
                             className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
                                 ${status === 'loading'
-                                ? 'bg-gray-400'
-                                : 'bg-blue-600 hover:bg-blue-700'}`}
+                                ? 'bg-gray-100'
+                                : 'bg-slate-500 hover:bg-slate-900'}`}
                         >
                             {status === 'loading' ? 'Sending...' : 'Send Test Newsletter'}
                         </button>
