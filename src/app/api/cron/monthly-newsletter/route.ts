@@ -42,13 +42,16 @@ export async function GET(request: Request) {
 
         console.log('Attempting to fetch newsletter from:', newsletterUrl);
 
+        const requestHeaders = {
+            'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+            'x-internal-token': process.env.INTERNAL_API_KEY ?? '',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        } as const;
+
         const response = await fetch(newsletterUrl, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
+            headers: requestHeaders
         });
 
         if (!response.ok) {
