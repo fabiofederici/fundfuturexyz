@@ -12,7 +12,7 @@ import '@fontsource/inter';
 
 export const metadata: Metadata = {
     title: "FundFuture",
-    description: "The latest in onchain funds & tokenization news.",
+    description: "The latest in onchain asset management & fund tokenization news.",
 };
 
 export default function RootLayout({
