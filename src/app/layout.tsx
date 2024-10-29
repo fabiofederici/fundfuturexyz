@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     // Twitter specific (optional but recommended)
     twitter: {
         card: 'summary_large_image',
-        title: 'FundFuture',
+        title: 'FundFuture - The latest in onchain funds & tokenization news',
         description: 'The latest in onchain funds & tokenization news.',
         images: ['/img/og-image.png'],
     },
