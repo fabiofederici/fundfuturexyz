@@ -18,7 +18,9 @@ const TITLE_SUFFIXES_TO_REMOVE = [
     ' - Decrypt',
     ' | Investing.com',
     ': Report',
-    ' By Investing.com'
+    ' By Investing.com',
+    ' By Invezz',
+    ' - Ledger Insights - blockchain for enterprise'
 ];
 
 // Enhanced title cleaning function

@@ -18,7 +18,9 @@ function normalizeTitle(title: string): string {
         .replace(/: report$/, '')
         .replace(/ by investing\.com$/, '')
         .replace(/^breaking:?\s*/i, '')
-        .replace(/^update:?\s*/i, '');
+        .replace(/^update:?\s*/i, '')
+        .replace(/ by invezz/i, '')
+        .replace(/\s*-\s*ledger insights\s*-\s*blockchain for enterprise$/, '');
 }
 
 export async function GET() {
