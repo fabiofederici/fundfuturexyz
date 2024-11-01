@@ -230,7 +230,7 @@ export class NewsService {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                uri: "6cb69db2-9f62-4974-9c1f-630c1f80f5bc",
+                uri: "454d6f19-7a97-4e02-9a06-4501e025cbf3",
                 dataType: ["news", "pr", "blog"],
                 resultType: "articles",
                 articlesSortBy: "date",
