@@ -28,15 +28,15 @@ async function handleRequest() {
         }
 
         // Validate API key
-        if (!process.env.NEWSAPI_API_KEY) {
-            console.error('NEWSAPI_API_KEY is not configured');
+        if (!process.env.NEWSAPI_API_KEY2) {
+            console.error('NEWSAPI_API_KEY2 is not configured');
             return NextResponse.json(
                 { error: 'API key configuration missing' },
                 { status: 500 }
             );
         }
 
-        const newsService = new NewsService(process.env.NEWSAPI_API_KEY);
+        const newsService = new NewsService(process.env.NEWSAPI_API_KEY2);
         const result = await newsService.fetchAndCacheNews() as NewsUpdateResult;
 
         const duration = Date.now() - startTime;
