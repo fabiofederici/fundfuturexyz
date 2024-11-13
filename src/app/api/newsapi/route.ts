@@ -28,6 +28,7 @@ export async function GET() {
         const { data: articles, error } = await supabase
             .from('news_items')
             .select('*')
+            .or('hidden.is.null,hidden.eq.false')
             .order('date', { ascending: false })
             .limit(100);
 
