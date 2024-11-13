@@ -39,6 +39,7 @@ export async function getPreviousMonthArticles(): Promise<NewsItem[]> {
     const { data: articles, error } = await supabase
         .from('news_items')
         .select('*')
+        .or('hidden.is.null,hidden.eq.false')
         .gte('date', firstDayLastMonth.toISOString())
         .lte('date', lastDayLastMonth.toISOString())
         .order('clicks', { ascending: false })
